@@ -1,0 +1,35 @@
+# Environment
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Node
+node_modules/
+dist/
+dist-ssr/
+*.local
+
+# Logs and OS
+*.log
+.DS_Store
+Thumbs.db
+
+# Editors
+.idea/
+.vscode/
+
+# Local image uploads. The folders stay; the files do not.
+backend/uploads/**/*.jpg
+backend/uploads/**/*.jpeg
+backend/uploads/**/*.png
+backend/uploads/**/*.webp
+backend/uploads/**/*.part

@@ -1,0 +1,1 @@
+"""SEMER API application package."""
