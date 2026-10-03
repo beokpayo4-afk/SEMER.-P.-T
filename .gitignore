@@ -27,10 +27,5 @@ Thumbs.db
 .idea/
 .vscode/
 
-# Local image uploads. The folders stay; the files do not.
-# On Render, keep these on a persistent disk (IMAGE_UPLOAD_DIR) or object storage (IMAGE_STORAGE=s3).
-backend/uploads/**/*.jpg
-backend/uploads/**/*.jpeg
-backend/uploads/**/*.png
-backend/uploads/**/*.webp
+# Incomplete uploads. Product and category images are tracked so Render can serve them.
 backend/uploads/**/*.part
