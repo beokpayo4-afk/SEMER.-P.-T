@@ -27,9 +27,5 @@ Thumbs.db
 .idea/
 .vscode/
 
-# Local image uploads. The folders stay; the files do not.
-backend/uploads/**/*.jpg
-backend/uploads/**/*.jpeg
-backend/uploads/**/*.png
-backend/uploads/**/*.webp
+# Incomplete uploads only. Finished images ship with the API so Render can serve them.
 backend/uploads/**/*.part
