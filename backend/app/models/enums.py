@@ -55,6 +55,11 @@ class TravelCategory(str, enum.Enum):
     customized = "customized"
 
 
+class PackageType(str, enum.Enum):
+    domestic = "domestic"
+    international = "international"
+
+
 class EventCategory(str, enum.Enum):
     wedding = "wedding"
     anniversary = "anniversary"

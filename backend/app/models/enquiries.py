@@ -5,7 +5,7 @@ from sqlalchemy import BigInteger, Boolean, CheckConstraint, Date, ForeignKey, S
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base, TimestampMixin, uuid_pk
-from app.models.enums import EnquiryStatus, EventCategory, RecordStatus, TravelCategory, pg_enum
+from app.models.enums import EnquiryStatus, EventCategory, PackageType, RecordStatus, TravelCategory, pg_enum
 
 
 class TravelPackage(Base, TimestampMixin):
@@ -21,6 +21,13 @@ class TravelPackage(Base, TimestampMixin):
     category: Mapped[TravelCategory] = mapped_column(
         pg_enum(TravelCategory, "travel_category"),
         nullable=False,
+        index=True,
+    )
+    package_type: Mapped[PackageType] = mapped_column(
+        pg_enum(PackageType, "package_type"),
+        nullable=False,
+        default=PackageType.domestic,
+        server_default=PackageType.domestic.value,
         index=True,
     )
     destination: Mapped[str] = mapped_column(String(120), nullable=False)

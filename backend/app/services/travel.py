@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session, selectinload
 
 from app.core.exceptions import APIError
 from app.models.enquiries import TravelEnquiry, TravelPackage, TravelPackageImage
-from app.models.enums import EnquiryStatus, RecordStatus, TravelCategory, UserRole
+from app.models.enums import EnquiryStatus, PackageType, RecordStatus, TravelCategory, UserRole
 from app.models.identity import User
 from app.schemas.travel import (
     TravelEnquiryCreate,
@@ -25,6 +25,7 @@ def list_packages(
     *,
     viewer: User | None,
     category: TravelCategory | None,
+    package_type: PackageType | None,
     featured: bool | None,
     status: RecordStatus | None,
     page: int,
@@ -38,6 +39,8 @@ def list_packages(
         filters.append(TravelPackage.status == status)
     if category is not None:
         filters.append(TravelPackage.category == category)
+    if package_type is not None:
+        filters.append(TravelPackage.package_type == package_type)
     if featured is not None:
         filters.append(TravelPackage.is_featured == featured)
     total = db.scalar(select(func.count()).select_from(TravelPackage).where(*filters)) or 0
@@ -64,12 +67,20 @@ def get_package(db: Session, package_id: uuid.UUID, viewer: User | None) -> Trav
     return _present_package(package)
 
 
+def get_package_by_slug(db: Session, slug: str, viewer: User | None) -> TravelPackagePublic:
+    package = db.scalar(select(TravelPackage).where(TravelPackage.slug == slug).options(*_package_options()))
+    if package is None or (not _is_admin(viewer) and package.status != RecordStatus.active):
+        raise APIError(status_code=404, detail="Package not found")
+    return _present_package(package)
+
+
 def create_package(db: Session, data: TravelPackageWrite) -> TravelPackagePublic:
     _ensure_slug(db, data.slug, None)
     package = TravelPackage(
         title=data.title,
         slug=data.slug,
         category=data.category,
+        package_type=data.package_type,
         destination=data.destination,
         country=data.country,
         duration_days=data.duration,
@@ -98,6 +109,7 @@ def update_package(db: Session, package_id: uuid.UUID, data: TravelPackageWrite)
     package.title = data.title
     package.slug = data.slug
     package.category = data.category
+    package.package_type = data.package_type
     package.destination = data.destination
     package.country = data.country
     package.duration_days = data.duration
@@ -234,6 +246,7 @@ def _present_package(package: TravelPackage) -> TravelPackagePublic:
         title=package.title,
         slug=package.slug,
         category=package.category,
+        package_type=package.package_type,
         destination=package.destination,
         country=package.country,
         duration=package.duration_days,

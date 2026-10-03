@@ -2,6 +2,8 @@ import { api } from "./api.ts";
 
 export type TravelCategory = "domestic" | "international" | "holiday" | "honeymoon" | "customized";
 
+export type PackageType = "domestic" | "international";
+
 export type TravelImage = {
   id: string;
   url: string;
@@ -14,6 +16,7 @@ export type TravelPackage = {
   title: string;
   slug: string;
   category: TravelCategory;
+  package_type: PackageType;
   destination: string;
   country: string;
   duration: number;
@@ -39,6 +42,7 @@ export type TravelPackagePage = {
 
 export type TravelQuery = {
   category?: TravelCategory;
+  package_type?: PackageType;
   featured?: boolean;
   page?: number;
   page_size?: number;
@@ -88,6 +92,23 @@ export function travelCategoryLabel(category: TravelCategory) {
   return travelCategories.find((item) => item.value === category)?.label ?? category;
 }
 
+export function travelDurationLabel(days: number, category?: TravelCategory) {
+  if (category === "international") {
+    const nights = Math.max(days - 1, 0);
+    const dayLabel = days === 1 ? "Day" : "Days";
+    const nightLabel = nights === 1 ? "Night" : "Nights";
+    return `${days} ${dayLabel} / ${nights} ${nightLabel}`;
+  }
+  return `${days} ${days === 1 ? "day" : "days"}`;
+}
+
+export function travelPlaceLabel(destination: string, country: string, category?: TravelCategory) {
+  if (category === "international" && destination.toLowerCase().includes(country.toLowerCase())) {
+    return destination;
+  }
+  return `${destination}, ${country}`;
+}
+
 export async function listTravel(query: TravelQuery = {}) {
   const { data } = await api.get<TravelPackagePage>("/api/travel", { params: query });
   return data;
@@ -95,6 +116,11 @@ export async function listTravel(query: TravelQuery = {}) {
 
 export async function getTravelPackage(packageId: string) {
   const { data } = await api.get<TravelPackage>(`/api/travel/${packageId}`);
+  return data;
+}
+
+export async function getTravelPackageBySlug(slug: string) {
+  const { data } = await api.get<TravelPackage>(`/api/travel/by-slug/${slug}`);
   return data;
 }
 

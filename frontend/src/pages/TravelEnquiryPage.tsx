@@ -25,6 +25,8 @@ export function TravelEnquiryPage() {
   const [travelers, setTravelers] = useState("2");
   const [budget, setBudget] = useState("");
   const [message, setMessage] = useState("");
+  const [packageTitle, setPackageTitle] = useState("");
+  const [packagePath, setPackagePath] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [sent, setSent] = useState(false);
   const nameValue = name ?? user?.full_name ?? "";
@@ -38,7 +40,14 @@ export function TravelEnquiryPage() {
     getTravelPackage(packageId)
       .then((travelPackage) => {
         if (active) {
+          setPackageTitle(travelPackage.title);
+          setPackagePath(
+            travelPackage.category === "international"
+              ? `/travel/international/${travelPackage.slug}`
+              : `/travel/${travelPackage.id}`,
+          );
           setDestination((current) => current || `${travelPackage.destination}, ${travelPackage.country}`);
+          setMessage((current) => current || `Enquiry for ${travelPackage.title}.`);
         }
       })
       .catch(() => undefined);
@@ -100,10 +109,11 @@ export function TravelEnquiryPage() {
 
   return (
     <section className="mx-auto max-w-3xl px-4 py-12 sm:px-6 sm:py-16">
-      <Link to={validPackage && packageId ? `/travel/${packageId}` : "/travel"} className="text-sm text-muted">
-        Travel
+      <Link to={packagePath || (validPackage && packageId ? `/travel/${packageId}` : "/travel")} className="text-sm text-muted">
+        {packageTitle ? packageTitle : "Travel"}
       </Link>
       <h1 className="mt-4 text-4xl sm:text-5xl">Travel enquiry</h1>
+      {packageTitle ? <p className="mt-3 text-sm">Package: {packageTitle}</p> : null}
       <p className="mt-3 leading-7 text-muted">
         Share the destination, dates, and budget. The reply is a quote, not a booking.
       </p>

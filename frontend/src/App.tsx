@@ -28,6 +28,7 @@ import { EventDetailPage } from "./pages/EventDetailPage.tsx";
 import { EventEnquiryPage } from "./pages/EventEnquiryPage.tsx";
 import { EventsPage } from "./pages/EventsPage.tsx";
 import { HomePage } from "./pages/HomePage.tsx";
+import { InternationalTripsPage } from "./pages/InternationalTripsPage.tsx";
 import { LoginPage } from "./pages/LoginPage.tsx";
 import { NotFoundPage } from "./pages/NotFoundPage.tsx";
 import { OrderPage } from "./pages/OrderPage.tsx";
@@ -73,6 +74,8 @@ export default function App() {
                 <Route path="products/:id" element={<ProductPage />} />
                 <Route path="travel" element={<TravelPage />} />
                 <Route path="travel/enquire" element={<TravelEnquiryPage />} />
+                <Route path="travel/international" element={<InternationalTripsPage />} />
+                <Route path="travel/international/:slug" element={<TravelDetailPage />} />
                 <Route path="travel/:id" element={<TravelDetailPage />} />
                 <Route path="events" element={<EventsPage />} />
                 <Route path="events/enquire" element={<EventEnquiryPage />} />

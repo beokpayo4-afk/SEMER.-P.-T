@@ -4,26 +4,40 @@ import { ErrorMessage } from "../components/ErrorMessage.tsx";
 import { Loading } from "../components/Loading.tsx";
 import { ProductImage } from "../components/ProductImage.tsx";
 import { usePageTitle } from "../hooks/usePageTitle.ts";
-import { getTravelPackage, travelCategoryLabel, type TravelPackage } from "../services/travel.ts";
+import {
+  getTravelPackage,
+  getTravelPackageBySlug,
+  travelCategoryLabel,
+  travelDurationLabel,
+  travelPlaceLabel,
+  type TravelPackage,
+} from "../services/travel.ts";
 import { apiErrorMessage } from "../utils/errors.ts";
 import { formatPaise } from "../utils/money.ts";
 import { isUuid } from "../utils/product.ts";
 
 export function TravelDetailPage() {
-  const { id = "" } = useParams();
+  const { id = "", slug = "" } = useParams();
   const validId = isUuid(id);
+  const validSlug = /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug);
+  const lookup = slug ? (validSlug ? slug : "") : validId ? id : "";
   const [travelPackage, setTravelPackage] = useState<TravelPackage | null>(null);
-  const [loading, setLoading] = useState(validId);
+  const [loading, setLoading] = useState(Boolean(lookup));
   const [error, setError] = useState("");
-  usePageTitle(travelPackage?.title ?? "Travel package");
+  const international = travelPackage?.category === "international";
+  usePageTitle(travelPackage?.title ?? "Travel package", {
+    description: travelPackage?.description,
+    image: travelPackage?.images[0]?.url,
+  });
 
   useEffect(() => {
-    if (!validId) {
+    if (!lookup) {
       return;
     }
     let active = true;
     setLoading(true);
-    getTravelPackage(id)
+    const request = slug ? getTravelPackageBySlug(lookup) : getTravelPackage(lookup);
+    request
       .then((next) => {
         if (active) {
           setTravelPackage(next);
@@ -44,9 +58,9 @@ export function TravelDetailPage() {
     return () => {
       active = false;
     };
-  }, [id, validId]);
+  }, [lookup, slug]);
 
-  if (!validId || (!loading && (error || !travelPackage))) {
+  if (!lookup || (!loading && (error || !travelPackage))) {
     return (
       <section className="mx-auto max-w-3xl px-4 py-16 sm:px-6">
         <ErrorMessage message="Package not found." />
@@ -75,11 +89,17 @@ export function TravelDetailPage() {
     ["Exclusions", travelPackage.exclusions],
   ].filter(([, text]) => text);
 
+  const backTo = international
+    ? "/travel/international"
+    : travelPackage.category === "holiday"
+      ? `/travel?category=holiday&type=${travelPackage.package_type}`
+      : "/travel";
+
   return (
     <article className="mx-auto grid max-w-7xl gap-10 px-4 py-12 sm:px-6 sm:py-16 lg:grid-cols-[1.1fr_0.9fr]">
-      <div>
-        <Link to="/travel" className="text-sm text-muted">
-          Travel
+      <div className={international ? "order-2 lg:order-1" : undefined}>
+        <Link to={backTo} className="text-sm text-muted">
+          {international ? "International Trips" : travelPackage.category === "holiday" ? "Holiday Packages" : "Travel"}
         </Link>
         <p className="mt-4 text-xs tracking-[0.14em] text-muted uppercase">
           {travelCategoryLabel(travelPackage.category)}
@@ -89,15 +109,11 @@ export function TravelDetailPage() {
         <dl className="mt-6 grid gap-4 text-sm sm:grid-cols-2">
           <div>
             <dt className="text-muted">Destination</dt>
-            <dd>
-              {travelPackage.destination}, {travelPackage.country}
-            </dd>
+            <dd>{travelPlaceLabel(travelPackage.destination, travelPackage.country, travelPackage.category)}</dd>
           </div>
           <div>
             <dt className="text-muted">Duration</dt>
-            <dd>
-              {travelPackage.duration} {travelPackage.duration === 1 ? "day" : "days"}
-            </dd>
+            <dd>{travelDurationLabel(travelPackage.duration, travelPackage.category)}</dd>
           </div>
           <div>
             <dt className="text-muted">Starting price</dt>
@@ -113,7 +129,7 @@ export function TravelDetailPage() {
           ))}
         </div>
       </div>
-      <div>
+      <div className={international ? "order-1 lg:order-2" : undefined}>
         <ProductImage
           src={image?.url}
           alt={image?.alt_text || travelPackage.title}

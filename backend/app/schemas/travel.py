@@ -4,7 +4,7 @@ from datetime import date, datetime
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
-from app.models.enums import EnquiryStatus, RecordStatus, TravelCategory
+from app.models.enums import EnquiryStatus, PackageType, RecordStatus, TravelCategory
 from app.services.storage.validate import clean_image_reference
 
 SLUG_PATTERN = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
@@ -48,6 +48,7 @@ class TravelPackageWrite(BaseModel):
     title: str = Field(min_length=1, max_length=180)
     slug: str = Field(min_length=1, max_length=180)
     category: TravelCategory
+    package_type: PackageType = PackageType.domestic
     destination: str = Field(min_length=1, max_length=120)
     country: str = Field(min_length=1, max_length=80)
     duration: int = Field(ge=1, le=365)
@@ -94,6 +95,7 @@ class TravelPackagePublic(BaseModel):
     title: str
     slug: str
     category: TravelCategory
+    package_type: PackageType
     destination: str
     country: str
     duration: int

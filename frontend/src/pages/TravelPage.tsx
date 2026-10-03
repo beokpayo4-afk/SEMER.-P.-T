@@ -9,6 +9,9 @@ import {
   listTravel,
   travelCategories,
   travelCategoryLabel,
+  travelDurationLabel,
+  travelPlaceLabel,
+  type PackageType,
   type TravelCategory,
   type TravelPackage,
 } from "../services/travel.ts";
@@ -22,11 +25,13 @@ function isCategory(value: string | null): value is TravelCategory {
 }
 
 export function TravelPage() {
-  usePageTitle("Travel");
   const [params, setParams] = useSearchParams();
   const categoryParam = params.get("category");
   const category = isCategory(categoryParam) ? categoryParam : undefined;
+  const holiday = category === "holiday";
+  const packageType: PackageType = params.get("type") === "international" ? "international" : "domestic";
   const page = Math.max(1, Number(params.get("page")) || 1);
+  usePageTitle(holiday ? "Holiday Packages" : "Travel");
   const [packages, setPackages] = useState<TravelPackage[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -35,7 +40,12 @@ export function TravelPage() {
   useEffect(() => {
     let active = true;
     setLoading(true);
-    listTravel({ category, page, page_size: pageSize })
+    listTravel({
+      category,
+      package_type: holiday ? packageType : undefined,
+      page,
+      page_size: pageSize,
+    })
       .then((result) => {
         if (!active) {
           return;
@@ -57,7 +67,7 @@ export function TravelPage() {
     return () => {
       active = false;
     };
-  }, [category, page]);
+  }, [category, holiday, packageType, page]);
 
   function setCategory(next: TravelCategory | undefined) {
     const following = new URLSearchParams();
@@ -67,14 +77,39 @@ export function TravelPage() {
     setParams(following);
   }
 
+  function setPackageType(next: PackageType) {
+    const following = new URLSearchParams(params);
+    following.set("category", "holiday");
+    following.set("type", next);
+    following.delete("page");
+    setParams(following);
+  }
+
   return (
     <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16">
       <p className="text-xs tracking-[0.18em] text-muted uppercase">Travel</p>
-      <h1 className="mt-3 max-w-3xl text-4xl sm:text-5xl">Trips, quoted before they are booked.</h1>
+      <h1 className="mt-3 max-w-3xl text-4xl sm:text-5xl">
+        {holiday ? "Holiday Packages" : "Trips, quoted before they are booked."}
+      </h1>
       <p className="mt-4 max-w-2xl leading-7 text-muted">
-        Domestic trips, international trips, holiday packages, and honeymoon packages. Choose a package and send an
-        enquiry. A quote comes back before any booking.
+        {holiday
+          ? "Ready holiday shapes for families and groups, with room to adjust nights and hotels."
+          : "Domestic trips, international trips, holiday packages, and honeymoon packages. Choose a package and send an enquiry. A quote comes back before any booking."}
       </p>
+      {holiday ? (
+        <div className="mt-8 grid gap-3 sm:grid-cols-2" role="tablist" aria-label="Holiday type">
+          <TypeTab
+            active={packageType === "domestic"}
+            label="🇮🇳 Domestic Holidays"
+            onClick={() => setPackageType("domestic")}
+          />
+          <TypeTab
+            active={packageType === "international"}
+            label="🌎 International Holidays"
+            onClick={() => setPackageType("international")}
+          />
+        </div>
+      ) : null}
       <div className="mt-8 flex flex-wrap gap-2">
         <FilterButton active={!category} onClick={() => setCategory(undefined)}>
           All
@@ -115,7 +150,7 @@ export function TravelPage() {
               <p className="text-xs tracking-[0.14em] text-muted uppercase">{travelCategoryLabel(item.category)}</p>
               <h2 className="mt-2 text-2xl">{item.title}</h2>
               <p className="mt-2 text-sm text-muted">
-                {item.destination}, {item.country} · {item.duration} {item.duration === 1 ? "day" : "days"}
+                {travelPlaceLabel(item.destination, item.country, item.category)} · {travelDurationLabel(item.duration, item.category)}
               </p>
               <p className="mt-3 text-sm">From {formatPaise(item.starting_price)}</p>
             </div>
@@ -133,6 +168,20 @@ export function TravelPage() {
         }}
       />
     </section>
+  );
+}
+
+function TypeTab({ active, label, onClick }: { active: boolean; label: string; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      role="tab"
+      aria-selected={active}
+      onClick={onClick}
+      className={`rounded-full px-5 py-3 text-sm sm:text-base ${active ? "bg-ink text-paper" : "border border-line bg-white"}`}
+    >
+      {label}
+    </button>
   );
 }
 

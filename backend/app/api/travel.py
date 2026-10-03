@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_optional_user, require_admin
 from app.db.session import get_db
-from app.models.enums import EnquiryStatus, RecordStatus, TravelCategory
+from app.models.enums import EnquiryStatus, PackageType, RecordStatus, TravelCategory
 from app.models.identity import User
 from app.schemas.travel import (
     TravelEnquiryCreate,
@@ -27,6 +27,7 @@ def list_packages(
     db: Annotated[Session, Depends(get_db)],
     viewer: Annotated[User | None, Depends(get_optional_user)],
     category: Annotated[TravelCategory | None, Query()] = None,
+    package_type: Annotated[PackageType | None, Query()] = None,
     featured: Annotated[bool | None, Query()] = None,
     status_filter: Annotated[RecordStatus | None, Query(alias="status")] = None,
     page: Annotated[int, Query(ge=1)] = 1,
@@ -36,6 +37,7 @@ def list_packages(
         db,
         viewer=viewer,
         category=category,
+        package_type=package_type,
         featured=featured,
         status=status_filter,
         page=page,
@@ -98,6 +100,15 @@ def delete_enquiry(
     _: Annotated[User, Depends(require_admin)],
 ) -> None:
     travel_service.delete_enquiry(db, enquiry_id)
+
+
+@router.get("/by-slug/{slug}", response_model=TravelPackagePublic)
+def get_package_by_slug(
+    slug: str,
+    db: Annotated[Session, Depends(get_db)],
+    viewer: Annotated[User | None, Depends(get_optional_user)],
+) -> TravelPackagePublic:
+    return travel_service.get_package_by_slug(db, slug, viewer)
 
 
 @router.get("/{package_id}", response_model=TravelPackagePublic)

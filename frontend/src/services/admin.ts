@@ -2,7 +2,7 @@ import { api } from "./api.ts";
 import type { Category, Product, ProductPage } from "./types.ts";
 import type { Order, OrderPage, OrderStatus } from "./orders.ts";
 import type { EventCategory, EventService, EventServicePage } from "./events.ts";
-import type { TravelCategory, TravelPackage, TravelPackagePage } from "./travel.ts";
+import type { PackageType, TravelCategory, TravelPackage, TravelPackagePage } from "./travel.ts";
 
 export type DashboardMonth = {
   month: string;
@@ -99,6 +99,7 @@ export type TravelInput = {
   title: string;
   slug: string;
   category: TravelCategory;
+  package_type: PackageType;
   destination: string;
   country: string;
   duration: number;
@@ -229,7 +230,7 @@ export async function adminOrders(page = 1) {
 }
 
 export async function adminTravel(page = 1) {
-  const { data } = await api.get<TravelPackagePage>("/api/travel", { params: { page, page_size: 20 } });
+  const { data } = await api.get<TravelPackagePage>("/api/travel", { params: { page, page_size: 100 } });
   return data;
 }
 

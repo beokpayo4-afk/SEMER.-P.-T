@@ -68,6 +68,7 @@ def test_packages_are_public_when_active_and_admin_manages_them(client: TestClie
     assert package["starting_price"] == 2500000
     assert package["duration"] == 4
     assert package["category"] == "domestic"
+    assert package["package_type"] == "domestic"
     assert package["images"][0]["url"] == "https://example.com/coorg.jpg"
 
     hidden = client.get("/api/travel", headers={"Authorization": "Bearer not-a-token"})
@@ -75,6 +76,7 @@ def test_packages_are_public_when_active_and_admin_manages_them(client: TestClie
     assert all(item["id"] != package["id"] for item in hidden.json()["items"])
     missing = client.get(f"/api/travel/{package['id']}")
     assert missing.status_code == 404
+    assert client.get(f"/api/travel/by-slug/{slug}").status_code == 404
 
     published = client.put("/api/travel/" + package["id"], json=_package(slug, featured=True), headers=admin)
     assert published.status_code == 200
@@ -83,6 +85,26 @@ def test_packages_are_public_when_active_and_admin_manages_them(client: TestClie
     detail = client.get(f"/api/travel/{package['id']}")
     assert detail.status_code == 200
     assert detail.json()["itinerary"].startswith("Day 1")
+    by_slug = client.get(f"/api/travel/by-slug/{slug}")
+    assert by_slug.status_code == 200
+    assert by_slug.json()["id"] == package["id"]
+
+    holiday_slug = f"holiday-{uuid.uuid4().hex[:8]}"
+    holiday = client.post(
+        "/api/travel",
+        json={**_package(holiday_slug, category="holiday"), "package_type": "international"},
+        headers=admin,
+    )
+    assert holiday.status_code == 201
+    holiday_id = holiday.json()["id"]
+    international_holidays = client.get(
+        "/api/travel",
+        params={"category": "holiday", "package_type": "international"},
+    )
+    assert any(item["id"] == holiday_id for item in international_holidays.json()["items"])
+    domestic_holidays = client.get("/api/travel", params={"category": "holiday", "package_type": "domestic"})
+    assert all(item["id"] != holiday_id for item in domestic_holidays.json()["items"])
+    assert client.delete(f"/api/travel/{holiday_id}", headers=admin).status_code == 204
 
     duplicate = client.post("/api/travel", json=_package(slug, category="holiday"), headers=admin)
     assert duplicate.status_code == 409
