@@ -27,5 +27,10 @@ Thumbs.db
 .idea/
 .vscode/
 
-# Incomplete uploads only. Finished images ship with the API so Render can serve them.
+# Local image uploads. The folders stay; the files do not.
+# On Render, keep these on a persistent disk (IMAGE_UPLOAD_DIR) or object storage (IMAGE_STORAGE=s3).
+backend/uploads/**/*.jpg
+backend/uploads/**/*.jpeg
+backend/uploads/**/*.png
+backend/uploads/**/*.webp
 backend/uploads/**/*.part
