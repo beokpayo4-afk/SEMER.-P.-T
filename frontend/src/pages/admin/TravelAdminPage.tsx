@@ -6,8 +6,17 @@ import { Input } from "../../components/Input.tsx";
 import { Loading } from "../../components/Loading.tsx";
 import { Select } from "../../components/Select.tsx";
 import { usePageTitle } from "../../hooks/usePageTitle.ts";
+import { useToast } from "../../hooks/useToast.ts";
 import { adminTravel, deleteTravel, saveTravel, type TravelInput } from "../../services/admin.ts";
-import { travelCategories, type PackageType, type TravelCategory, type TravelPackage } from "../../services/travel.ts";
+import { api } from "../../services/api.ts";
+import {
+  packageCategories,
+  travelCategories,
+  type PackageCategory,
+  type PackageType,
+  type TravelCategory,
+  type TravelPackage,
+} from "../../services/travel.ts";
 import { apiErrorMessage } from "../../utils/errors.ts";
 import { formatPaise, rupeesToPaise } from "../../utils/money.ts";
 
@@ -16,6 +25,7 @@ const empty = {
   slug: "",
   category: "domestic" as TravelCategory,
   packageType: "domestic" as PackageType,
+  packageCategory: "" as "" | PackageCategory,
   destination: "",
   country: "India",
   duration: "3",
@@ -24,9 +34,15 @@ const empty = {
   itinerary: "",
   inclusions: "",
   exclusions: "",
+  romanticHighlights: "",
+  hotelCategory: "",
+  roomType: "",
+  coupleExperiences: "",
+  honeymoonInclusions: "",
   status: "draft" as TravelInput["status"],
   featured: false,
   imageUrl: "",
+  gallery: [] as string[],
 };
 
 export function TravelAdminPage() {
@@ -37,6 +53,8 @@ export function TravelAdminPage() {
   const [current, setCurrent] = useState<TravelPackage | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
+  const [uploadingGallery, setUploadingGallery] = useState(false);
+  const { showToast } = useToast();
 
   function load() {
     setLoading(true);
@@ -61,6 +79,7 @@ export function TravelAdminPage() {
       slug: item.slug,
       category: item.category,
       packageType: item.package_type,
+      packageCategory: item.package_category ?? "",
       destination: item.destination,
       country: item.country,
       duration: String(item.duration),
@@ -69,10 +88,39 @@ export function TravelAdminPage() {
       itinerary: item.itinerary,
       inclusions: item.inclusions,
       exclusions: item.exclusions,
+      romanticHighlights: item.romantic_highlights,
+      hotelCategory: item.hotel_category,
+      roomType: item.room_type,
+      coupleExperiences: item.couple_experiences,
+      honeymoonInclusions: item.honeymoon_inclusions,
       status: item.status,
       featured: item.featured,
       imageUrl: item.images[0]?.url ?? "",
+      gallery: item.images.slice(1).map((image) => image.url),
     });
+  }
+
+  function chooseCategory(category: TravelCategory) {
+    const packageCategory =
+      category === "holiday" || category === "honeymoon" ? category : form.packageCategory;
+    setForm({ ...form, category, packageCategory });
+  }
+
+  async function uploadGallery(file: File | undefined) {
+    if (!file) {
+      return;
+    }
+    const body = new FormData();
+    body.append("file", file);
+    setUploadingGallery(true);
+    try {
+      const { data } = await api.post<{ url: string }>("/api/admin/uploads/travel", body);
+      setForm((currentForm) => ({ ...currentForm, gallery: [...currentForm.gallery, data.url] }));
+    } catch (reason: unknown) {
+      showToast(apiErrorMessage(reason, "The image could not be uploaded."));
+    } finally {
+      setUploadingGallery(false);
+    }
   }
 
   async function submit(event: FormEvent) {
@@ -83,8 +131,15 @@ export function TravelAdminPage() {
       setError("Enter a duration and a starting price in rupees.");
       return;
     }
-    const images = form.imageUrl.trim()
-      ? [{ url: form.imageUrl.trim(), alt_text: form.title, sort_order: 0 }]
+    const images = [
+      ...(form.imageUrl.trim() ? [{ url: form.imageUrl.trim(), alt_text: form.title, sort_order: 0 }] : []),
+      ...form.gallery
+        .map((url) => url.trim())
+        .filter(Boolean)
+        .map((url, index) => ({ url, alt_text: form.title, sort_order: index + 1 })),
+    ];
+    const savedImages = images.length
+      ? images
       : current?.images.map((image) => ({ url: image.url, alt_text: image.alt_text, sort_order: image.sort_order })) ?? [];
     try {
       await saveTravel(
@@ -93,6 +148,7 @@ export function TravelAdminPage() {
           slug: form.slug,
           category: form.category,
           package_type: form.packageType,
+          package_category: form.packageCategory || null,
           destination: form.destination,
           country: form.country,
           duration,
@@ -104,7 +160,12 @@ export function TravelAdminPage() {
           activities: current?.activities ?? "",
           inclusions: form.inclusions,
           exclusions: form.exclusions,
-          images,
+          romantic_highlights: form.romanticHighlights,
+          hotel_category: form.hotelCategory,
+          room_type: form.roomType,
+          couple_experiences: form.coupleExperiences,
+          honeymoon_inclusions: form.honeymoonInclusions,
+          images: savedImages,
           status: form.status,
           featured: form.featured,
         },
@@ -141,10 +202,16 @@ export function TravelAdminPage() {
         <Select
           label="Category"
           value={form.category}
-          onChange={(event) => setForm({ ...form, category: event.target.value as TravelCategory })}
+          onChange={(event) => chooseCategory(event.target.value as TravelCategory)}
           options={travelCategories.map((item) => ({ value: item.value, label: item.label }))}
         />
-        {form.category === "holiday" ? (
+        <Select
+          label="Package category"
+          value={form.packageCategory}
+          onChange={(event) => setForm({ ...form, packageCategory: event.target.value as "" | PackageCategory })}
+          options={[{ value: "", label: "None" }, ...packageCategories.map((item) => ({ value: item.value, label: item.label }))]}
+        />
+        {form.category === "holiday" || form.category === "honeymoon" ? (
           <fieldset className="grid gap-2 text-sm">
             <legend className="font-medium">Package type</legend>
             <label className="flex items-center gap-2">
@@ -189,7 +256,58 @@ export function TravelAdminPage() {
           <span className="mb-1.5 block font-medium">Exclusions</span>
           <textarea value={form.exclusions} onChange={(event) => setForm({ ...form, exclusions: event.target.value })} rows={4} className="w-full rounded-xl border border-line px-3 py-2" />
         </label>
+        {form.category === "honeymoon" ? (
+          <>
+            <label className="block text-sm">
+              <span className="mb-1.5 block font-medium">Romantic highlights</span>
+              <textarea value={form.romanticHighlights} onChange={(event) => setForm({ ...form, romanticHighlights: event.target.value })} rows={4} className="w-full rounded-xl border border-line px-3 py-2" />
+            </label>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Input label="Hotel category" value={form.hotelCategory} onChange={(event) => setForm({ ...form, hotelCategory: event.target.value })} />
+              <Input label="Room type" value={form.roomType} onChange={(event) => setForm({ ...form, roomType: event.target.value })} />
+            </div>
+            <label className="block text-sm">
+              <span className="mb-1.5 block font-medium">Couple experiences</span>
+              <textarea value={form.coupleExperiences} onChange={(event) => setForm({ ...form, coupleExperiences: event.target.value })} rows={4} className="w-full rounded-xl border border-line px-3 py-2" />
+            </label>
+            <label className="block text-sm">
+              <span className="mb-1.5 block font-medium">Honeymoon inclusions</span>
+              <textarea value={form.honeymoonInclusions} onChange={(event) => setForm({ ...form, honeymoonInclusions: event.target.value })} rows={4} className="w-full rounded-xl border border-line px-3 py-2" />
+            </label>
+          </>
+        ) : null}
         <ImageField folder="travel" value={form.imageUrl} onChange={(url) => setForm({ ...form, imageUrl: url })} />
+        <div className="text-sm">
+          <span className="mb-1.5 block font-medium">Gallery</span>
+          <label className="block">
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp"
+              disabled={uploadingGallery}
+              onChange={(event) => {
+                void uploadGallery(event.target.files?.[0]);
+                event.target.value = "";
+              }}
+            />
+            <span className="mt-1 block text-muted">{uploadingGallery ? "Uploading" : "Add another destination photo."}</span>
+          </label>
+          {form.gallery.length > 0 ? (
+            <ul className="mt-3 space-y-2">
+              {form.gallery.map((url) => (
+                <li key={url} className="flex items-center justify-between gap-3">
+                  <span className="truncate text-muted">{url}</span>
+                  <button
+                    type="button"
+                    className="text-wine"
+                    onClick={() => setForm({ ...form, gallery: form.gallery.filter((item) => item !== url) })}
+                  >
+                    Remove
+                  </button>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </div>
         <Select
           label="Status"
           value={form.status}
@@ -214,7 +332,9 @@ export function TravelAdminPage() {
               <p>{item.title}</p>
               <p className="text-muted">
                 {item.status}
-                {item.category === "holiday" ? ` · ${item.package_type === "international" ? "International" : "Domestic"}` : ""} · From {formatPaise(item.starting_price)}
+                {item.category === "holiday" || item.category === "honeymoon"
+                  ? ` · ${item.package_type === "international" ? "International" : "Domestic"}`
+                  : ""} · From {formatPaise(item.starting_price)}
               </p>
             </div>
             <div className="space-x-3">

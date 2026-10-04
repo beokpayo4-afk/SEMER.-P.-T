@@ -60,6 +60,17 @@ class PackageType(str, enum.Enum):
     international = "international"
 
 
+class PackageCategory(str, enum.Enum):
+    holiday = "holiday"
+    honeymoon = "honeymoon"
+    family = "family"
+    adventure = "adventure"
+    beach = "beach"
+    luxury = "luxury"
+    pilgrimage = "pilgrimage"
+    group = "group"
+
+
 class EventCategory(str, enum.Enum):
     wedding = "wedding"
     anniversary = "anniversary"

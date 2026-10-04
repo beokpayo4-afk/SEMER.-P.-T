@@ -5,7 +5,15 @@ from sqlalchemy import BigInteger, Boolean, CheckConstraint, Date, ForeignKey, S
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base, TimestampMixin, uuid_pk
-from app.models.enums import EnquiryStatus, EventCategory, PackageType, RecordStatus, TravelCategory, pg_enum
+from app.models.enums import (
+    EnquiryStatus,
+    EventCategory,
+    PackageCategory,
+    PackageType,
+    RecordStatus,
+    TravelCategory,
+    pg_enum,
+)
 
 
 class TravelPackage(Base, TimestampMixin):
@@ -30,6 +38,10 @@ class TravelPackage(Base, TimestampMixin):
         server_default=PackageType.domestic.value,
         index=True,
     )
+    package_category: Mapped[PackageCategory | None] = mapped_column(
+        pg_enum(PackageCategory, "package_category"),
+        index=True,
+    )
     destination: Mapped[str] = mapped_column(String(120), nullable=False)
     country: Mapped[str] = mapped_column(String(80), nullable=False)
     duration_days: Mapped[int] = mapped_column(nullable=False)
@@ -41,6 +53,11 @@ class TravelPackage(Base, TimestampMixin):
     activities: Mapped[str] = mapped_column(Text, nullable=False, server_default=text("''"))
     inclusions: Mapped[str] = mapped_column(Text, nullable=False, server_default=text("''"))
     exclusions: Mapped[str] = mapped_column(Text, nullable=False, server_default=text("''"))
+    romantic_highlights: Mapped[str] = mapped_column(Text, nullable=False, server_default=text("''"))
+    hotel_category: Mapped[str] = mapped_column(Text, nullable=False, server_default=text("''"))
+    room_type: Mapped[str] = mapped_column(Text, nullable=False, server_default=text("''"))
+    couple_experiences: Mapped[str] = mapped_column(Text, nullable=False, server_default=text("''"))
+    honeymoon_inclusions: Mapped[str] = mapped_column(Text, nullable=False, server_default=text("''"))
     is_featured: Mapped[bool] = mapped_column(
         Boolean,
         nullable=False,

@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session, selectinload
 
 from app.core.exceptions import APIError
 from app.models.enquiries import TravelEnquiry, TravelPackage, TravelPackageImage
-from app.models.enums import EnquiryStatus, PackageType, RecordStatus, TravelCategory, UserRole
+from app.models.enums import EnquiryStatus, PackageCategory, PackageType, RecordStatus, TravelCategory, UserRole
 from app.models.identity import User
 from app.schemas.travel import (
     TravelEnquiryCreate,
@@ -26,6 +26,7 @@ def list_packages(
     viewer: User | None,
     category: TravelCategory | None,
     package_type: PackageType | None,
+    package_category: PackageCategory | None,
     featured: bool | None,
     status: RecordStatus | None,
     page: int,
@@ -41,6 +42,8 @@ def list_packages(
         filters.append(TravelPackage.category == category)
     if package_type is not None:
         filters.append(TravelPackage.package_type == package_type)
+    if package_category is not None:
+        filters.append(TravelPackage.package_category == package_category)
     if featured is not None:
         filters.append(TravelPackage.is_featured == featured)
     total = db.scalar(select(func.count()).select_from(TravelPackage).where(*filters)) or 0
@@ -81,6 +84,7 @@ def create_package(db: Session, data: TravelPackageWrite) -> TravelPackagePublic
         slug=data.slug,
         category=data.category,
         package_type=data.package_type,
+        package_category=_resolved_package_category(data),
         destination=data.destination,
         country=data.country,
         duration_days=data.duration,
@@ -92,6 +96,11 @@ def create_package(db: Session, data: TravelPackageWrite) -> TravelPackagePublic
         activities=data.activities,
         inclusions=data.inclusions,
         exclusions=data.exclusions,
+        romantic_highlights=data.romantic_highlights,
+        hotel_category=data.hotel_category,
+        room_type=data.room_type,
+        couple_experiences=data.couple_experiences,
+        honeymoon_inclusions=data.honeymoon_inclusions,
         is_featured=data.featured,
         status=data.status,
     )
@@ -110,6 +119,7 @@ def update_package(db: Session, package_id: uuid.UUID, data: TravelPackageWrite)
     package.slug = data.slug
     package.category = data.category
     package.package_type = data.package_type
+    package.package_category = _resolved_package_category(data)
     package.destination = data.destination
     package.country = data.country
     package.duration_days = data.duration
@@ -121,6 +131,11 @@ def update_package(db: Session, package_id: uuid.UUID, data: TravelPackageWrite)
     package.activities = data.activities
     package.inclusions = data.inclusions
     package.exclusions = data.exclusions
+    package.romantic_highlights = data.romantic_highlights
+    package.hotel_category = data.hotel_category
+    package.room_type = data.room_type
+    package.couple_experiences = data.couple_experiences
+    package.honeymoon_inclusions = data.honeymoon_inclusions
     package.is_featured = data.featured
     package.status = data.status
     _replace_images(package, data)
@@ -247,6 +262,7 @@ def _present_package(package: TravelPackage) -> TravelPackagePublic:
         slug=package.slug,
         category=package.category,
         package_type=package.package_type,
+        package_category=package.package_category,
         destination=package.destination,
         country=package.country,
         duration=package.duration_days,
@@ -258,6 +274,11 @@ def _present_package(package: TravelPackage) -> TravelPackagePublic:
         activities=package.activities,
         inclusions=package.inclusions,
         exclusions=package.exclusions,
+        romantic_highlights=package.romantic_highlights,
+        hotel_category=package.hotel_category,
+        room_type=package.room_type,
+        couple_experiences=package.couple_experiences,
+        honeymoon_inclusions=package.honeymoon_inclusions,
         images=[
             TravelImagePublic(id=image.id, url=image.url, alt_text=image.alt_text, sort_order=image.sort_order)
             for image in package.images
@@ -282,6 +303,16 @@ def _present_enquiry(enquiry: TravelEnquiry) -> TravelEnquiryPublic:
         status=enquiry.status,
         created_at=enquiry.created_at,
     )
+
+
+def _resolved_package_category(data: TravelPackageWrite) -> PackageCategory | None:
+    if data.package_category is not None:
+        return data.package_category
+    if data.category == TravelCategory.holiday:
+        return PackageCategory.holiday
+    if data.category == TravelCategory.honeymoon:
+        return PackageCategory.honeymoon
+    return None
 
 
 def _package_options():

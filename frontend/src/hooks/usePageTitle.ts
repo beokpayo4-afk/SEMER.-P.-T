@@ -41,5 +41,11 @@ export function usePageTitle(title: string, details?: PageDetails) {
     setMeta("property", "og:description", description);
     setMeta("property", "og:image", imageUrl);
     setMeta("property", "og:url", window.location.href);
+    const canonical = document.head.querySelector('link[rel="canonical"]') ?? document.createElement("link");
+    canonical.setAttribute("rel", "canonical");
+    canonical.setAttribute("href", window.location.href);
+    if (!canonical.parentElement) {
+      document.head.appendChild(canonical);
+    }
   }, [title, description, image]);
 }

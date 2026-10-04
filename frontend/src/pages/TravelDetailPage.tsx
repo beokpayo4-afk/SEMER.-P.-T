@@ -15,6 +15,7 @@ import {
 import { apiErrorMessage } from "../utils/errors.ts";
 import { formatPaise } from "../utils/money.ts";
 import { isUuid } from "../utils/product.ts";
+import { honeymoonPlace } from "./HoneymoonPackagesPage.tsx";
 
 export function TravelDetailPage() {
   const { id = "", slug = "" } = useParams();
@@ -77,6 +78,10 @@ export function TravelDetailPage() {
         <Loading label="Loading package" />
       </section>
     );
+  }
+
+  if (travelPackage.category === "honeymoon") {
+    return <HoneymoonDetail travelPackage={travelPackage} />;
   }
 
   const image = travelPackage.images[0];
@@ -142,6 +147,101 @@ export function TravelDetailPage() {
           Enquire
         </Link>
         <p className="mt-3 text-sm text-muted">The starting price is confirmed with a quote after your enquiry.</p>
+      </div>
+    </article>
+  );
+}
+
+function HoneymoonDetail({ travelPackage }: { travelPackage: TravelPackage }) {
+  const image = travelPackage.images[0];
+  const gallery = travelPackage.images.slice(1);
+  const sections = [
+    ["Romantic highlights", travelPackage.romantic_highlights],
+    ["Itinerary", travelPackage.itinerary],
+    ["Couple experiences", travelPackage.couple_experiences],
+    ["Honeymoon inclusions", travelPackage.honeymoon_inclusions],
+    ["Inclusions", travelPackage.inclusions],
+    ["Exclusions", travelPackage.exclusions],
+    ["Accommodation", travelPackage.accommodation],
+    ["Transportation", travelPackage.transportation],
+    ["Activities", travelPackage.activities],
+  ].filter(([, text]) => text);
+  const quote = (
+    <>
+      <Link
+        to={`/travel/enquire?package=${travelPackage.id}`}
+        className="inline-flex rounded-full bg-wine px-5 py-2.5 text-sm text-paper"
+      >
+        Enquire
+      </Link>
+      <p className="mt-3 text-sm text-muted">The starting price is confirmed with a quote after your enquiry.</p>
+    </>
+  );
+
+  return (
+    <article className="mx-auto flex max-w-7xl flex-col gap-10 px-4 py-12 sm:px-6 sm:py-16 lg:grid lg:grid-cols-[1.1fr_0.9fr]">
+      <div className="order-2 lg:order-1">
+        <Link to={`/travel/honeymoon?type=${travelPackage.package_type}`} className="text-sm text-muted">
+          Honeymoon Packages
+        </Link>
+        <p className="mt-4 text-xs tracking-[0.14em] text-muted uppercase">Honeymoon</p>
+        <h1 className="mt-2 text-4xl sm:text-5xl">{travelPackage.title}</h1>
+        <p className="mt-4 text-lg leading-8 text-muted">{travelPackage.description}</p>
+        <dl className="mt-6 grid gap-4 text-sm sm:grid-cols-2">
+          <div>
+            <dt className="text-muted">Destination</dt>
+            <dd>{honeymoonPlace(travelPackage)}</dd>
+          </div>
+          <div>
+            <dt className="text-muted">Duration</dt>
+            <dd>{travelDurationLabel(travelPackage.duration, travelPackage.category)}</dd>
+          </div>
+          <div>
+            <dt className="text-muted">Starting price</dt>
+            <dd>{formatPaise(travelPackage.starting_price)}</dd>
+          </div>
+          {travelPackage.hotel_category ? (
+            <div>
+              <dt className="text-muted">Hotel category</dt>
+              <dd>{travelPackage.hotel_category}</dd>
+            </div>
+          ) : null}
+          {travelPackage.room_type ? (
+            <div>
+              <dt className="text-muted">Room type</dt>
+              <dd>{travelPackage.room_type}</dd>
+            </div>
+          ) : null}
+        </dl>
+      </div>
+      <div className="order-1 lg:order-2">
+        <ProductImage
+          src={image?.url}
+          alt={image?.alt_text || travelPackage.title}
+          className="aspect-4/3 w-full rounded-3xl"
+        />
+        {gallery.length > 0 ? (
+          <div className="mt-3 grid grid-cols-3 gap-3">
+            {gallery.map((item) => (
+              <ProductImage
+                key={item.id}
+                src={item.url}
+                alt={item.alt_text || travelPackage.title}
+                className="aspect-4/3 w-full rounded-2xl"
+              />
+            ))}
+          </div>
+        ) : null}
+        <div className="mt-6 hidden lg:block">{quote}</div>
+      </div>
+      <div className="order-3 lg:hidden">{quote}</div>
+      <div className="order-4 space-y-6 lg:order-3 lg:col-start-1">
+        {sections.map(([title, text]) => (
+          <section key={title}>
+            <h2 className="text-2xl">{title}</h2>
+            <p className="mt-2 whitespace-pre-line leading-7">{text}</p>
+          </section>
+        ))}
       </div>
     </article>
   );

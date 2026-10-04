@@ -10,7 +10,11 @@ const links = [
   {
     to: "/travel",
     label: "Travel",
-    children: [{ to: "/travel/international", label: "International Trips" }],
+    children: [
+      { to: "/travel/international", label: "International Trips" },
+      { to: "/travel?category=holiday", label: "Holiday Packages" },
+      { to: "/travel/honeymoon", label: "Honeymoon Packages" },
+    ],
   },
   { to: "/events", label: "Events", children: [] },
   { to: "/about", label: "About", children: [] },

@@ -4,7 +4,7 @@ from datetime import date, datetime
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
-from app.models.enums import EnquiryStatus, PackageType, RecordStatus, TravelCategory
+from app.models.enums import EnquiryStatus, PackageCategory, PackageType, RecordStatus, TravelCategory
 from app.services.storage.validate import clean_image_reference
 
 SLUG_PATTERN = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
@@ -49,6 +49,7 @@ class TravelPackageWrite(BaseModel):
     slug: str = Field(min_length=1, max_length=180)
     category: TravelCategory
     package_type: PackageType = PackageType.domestic
+    package_category: PackageCategory | None = None
     destination: str = Field(min_length=1, max_length=120)
     country: str = Field(min_length=1, max_length=80)
     duration: int = Field(ge=1, le=365)
@@ -60,6 +61,11 @@ class TravelPackageWrite(BaseModel):
     activities: str = Field(default="", max_length=8000)
     inclusions: str = Field(default="", max_length=8000)
     exclusions: str = Field(default="", max_length=8000)
+    romantic_highlights: str = Field(default="", max_length=8000)
+    hotel_category: str = Field(default="", max_length=8000)
+    room_type: str = Field(default="", max_length=8000)
+    couple_experiences: str = Field(default="", max_length=8000)
+    honeymoon_inclusions: str = Field(default="", max_length=8000)
     images: list[TravelImageWrite] = Field(default_factory=list, max_length=12)
     status: RecordStatus = RecordStatus.draft
     featured: bool = False
@@ -77,7 +83,20 @@ class TravelPackageWrite(BaseModel):
             raise ValueError("Slug must use lowercase letters, numbers, and hyphens")
         return slug
 
-    @field_validator("description", "itinerary", "accommodation", "transportation", "activities", "inclusions", "exclusions")
+    @field_validator(
+        "description",
+        "itinerary",
+        "accommodation",
+        "transportation",
+        "activities",
+        "inclusions",
+        "exclusions",
+        "romantic_highlights",
+        "hotel_category",
+        "room_type",
+        "couple_experiences",
+        "honeymoon_inclusions",
+    )
     @classmethod
     def clean_body(cls, value: str) -> str:
         return value.strip()
@@ -96,6 +115,7 @@ class TravelPackagePublic(BaseModel):
     slug: str
     category: TravelCategory
     package_type: PackageType
+    package_category: PackageCategory | None
     destination: str
     country: str
     duration: int
@@ -107,6 +127,11 @@ class TravelPackagePublic(BaseModel):
     activities: str
     inclusions: str
     exclusions: str
+    romantic_highlights: str
+    hotel_category: str
+    room_type: str
+    couple_experiences: str
+    honeymoon_inclusions: str
     images: list[TravelImagePublic]
     status: RecordStatus
     featured: bool

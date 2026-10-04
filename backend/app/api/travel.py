@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_optional_user, require_admin
 from app.db.session import get_db
-from app.models.enums import EnquiryStatus, PackageType, RecordStatus, TravelCategory
+from app.models.enums import EnquiryStatus, PackageCategory, PackageType, RecordStatus, TravelCategory
 from app.models.identity import User
 from app.schemas.travel import (
     TravelEnquiryCreate,
@@ -28,6 +28,7 @@ def list_packages(
     viewer: Annotated[User | None, Depends(get_optional_user)],
     category: Annotated[TravelCategory | None, Query()] = None,
     package_type: Annotated[PackageType | None, Query()] = None,
+    package_category: Annotated[PackageCategory | None, Query()] = None,
     featured: Annotated[bool | None, Query()] = None,
     status_filter: Annotated[RecordStatus | None, Query(alias="status")] = None,
     page: Annotated[int, Query(ge=1)] = 1,
@@ -38,6 +39,7 @@ def list_packages(
         viewer=viewer,
         category=category,
         package_type=package_type,
+        package_category=package_category,
         featured=featured,
         status=status_filter,
         page=page,

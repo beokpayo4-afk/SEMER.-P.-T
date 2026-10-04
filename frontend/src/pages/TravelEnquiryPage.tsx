@@ -5,7 +5,7 @@ import { Input } from "../components/Input.tsx";
 import { useAuth } from "../hooks/useAuth.ts";
 import { usePageTitle } from "../hooks/usePageTitle.ts";
 import { useToast } from "../hooks/useToast.ts";
-import { getTravelPackage, submitTravelEnquiry } from "../services/travel.ts";
+import { getTravelPackage, submitTravelEnquiry, type TravelCategory } from "../services/travel.ts";
 import { apiErrorMessage } from "../utils/errors.ts";
 import { rupeesToPaise } from "../utils/money.ts";
 import { isUuid } from "../utils/product.ts";
@@ -27,10 +27,13 @@ export function TravelEnquiryPage() {
   const [message, setMessage] = useState("");
   const [packageTitle, setPackageTitle] = useState("");
   const [packagePath, setPackagePath] = useState("");
+  const [packageCategory, setPackageCategory] = useState<TravelCategory | "">("");
+  const [packagePrice, setPackagePrice] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [sent, setSent] = useState(false);
   const nameValue = name ?? user?.full_name ?? "";
   const emailValue = email ?? user?.email ?? "";
+  const honeymoon = packageCategory === "honeymoon";
 
   useEffect(() => {
     if (!validPackage || !packageId) {
@@ -41,13 +44,20 @@ export function TravelEnquiryPage() {
       .then((travelPackage) => {
         if (active) {
           setPackageTitle(travelPackage.title);
+          setPackageCategory(travelPackage.category);
+          setPackagePrice(travelPackage.starting_price);
           setPackagePath(
             travelPackage.category === "international"
               ? `/travel/international/${travelPackage.slug}`
-              : `/travel/${travelPackage.id}`,
+              : travelPackage.category === "honeymoon"
+                ? `/travel/honeymoon/${travelPackage.slug}`
+                : `/travel/${travelPackage.id}`,
           );
           setDestination((current) => current || `${travelPackage.destination}, ${travelPackage.country}`);
           setMessage((current) => current || `Enquiry for ${travelPackage.title}.`);
+          if (travelPackage.category === "honeymoon") {
+            setTravelers((current) => (current === "2" ? "1" : current));
+          }
         }
       })
       .catch(() => undefined);
@@ -58,14 +68,15 @@ export function TravelEnquiryPage() {
 
   async function submit(event: FormEvent) {
     event.preventDefault();
+    const honeymoonEnquiry = packageCategory === "honeymoon";
     const travelerCount = Number(travelers);
-    const budgetPaise = rupeesToPaise(budget);
+    const budgetPaise = honeymoonEnquiry ? packagePrice : rupeesToPaise(budget);
     if (!nameValue || !emailValue || !phone || !destination || !travelDate || !message.trim()) {
       showToast("Complete the enquiry.");
       return;
     }
     if (!Number.isInteger(travelerCount) || travelerCount < 1) {
-      showToast("Enter the number of travelers.");
+      showToast(honeymoonEnquiry ? "Enter the number of couples." : "Enter the number of travelers.");
       return;
     }
     if (budgetPaise === undefined) {
@@ -115,24 +126,38 @@ export function TravelEnquiryPage() {
       <h1 className="mt-4 text-4xl sm:text-5xl">Travel enquiry</h1>
       {packageTitle ? <p className="mt-3 text-sm">Package: {packageTitle}</p> : null}
       <p className="mt-3 leading-7 text-muted">
-        Share the destination, dates, and budget. The reply is a quote, not a booking.
+        {honeymoon
+          ? "Share the destination and travel date. The reply is a quote, not a booking."
+          : "Share the destination, dates, and budget. The reply is a quote, not a booking."}
       </p>
       <form onSubmit={(event) => void submit(event)} className="mt-8 space-y-4">
-        <Input label="Name" value={nameValue} onChange={(event) => setName(event.target.value)} required />
+        <Input label={honeymoon ? "Full name" : "Name"} value={nameValue} onChange={(event) => setName(event.target.value)} required />
         <Input label="Email" type="email" value={emailValue} onChange={(event) => setEmail(event.target.value)} required />
-        <Input label="Phone" value={phone} onChange={(event) => setPhone(event.target.value)} required />
-        <Input label="Destination" value={destination} onChange={(event) => setDestination(event.target.value)} required />
-        <div className="grid gap-4 sm:grid-cols-3">
+        <Input
+          label={honeymoon ? "Mobile number" : "Phone"}
+          value={phone}
+          onChange={(event) => setPhone(event.target.value)}
+          required
+        />
+        <Input
+          label={honeymoon ? "Preferred destination" : "Destination"}
+          value={destination}
+          onChange={(event) => setDestination(event.target.value)}
+          required
+        />
+        <div className={`grid gap-4 ${honeymoon ? "sm:grid-cols-2" : "sm:grid-cols-3"}`}>
           <Input label="Travel date" type="date" value={travelDate} onChange={(event) => setTravelDate(event.target.value)} required />
           <Input
-            label="Number of travelers"
+            label={honeymoon ? "Number of couples" : "Number of travelers"}
             type="number"
             min={1}
             value={travelers}
             onChange={(event) => setTravelers(event.target.value)}
             required
           />
-          <Input label="Budget (₹)" inputMode="decimal" value={budget} onChange={(event) => setBudget(event.target.value)} required />
+          {honeymoon ? null : (
+            <Input label="Budget (₹)" inputMode="decimal" value={budget} onChange={(event) => setBudget(event.target.value)} required />
+          )}
         </div>
         <label className="block text-sm">
           <span className="mb-1.5 block font-medium">Message</span>

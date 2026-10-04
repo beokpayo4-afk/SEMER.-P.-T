@@ -117,17 +117,48 @@ def test_packages_are_public_when_active_and_admin_manages_them(client: TestClie
 def test_honeymoon_packages_can_be_published_and_filtered(client: TestClient, db_session: Session) -> None:
     admin = _admin(client, db_session)
     slug = f"honeymoon-{uuid.uuid4().hex[:8]}"
-    created = client.post("/api/travel", json=_package(slug, category="honeymoon"), headers=admin)
+    created = client.post(
+        "/api/travel",
+        json={
+            **_package(slug, category="honeymoon"),
+            "romantic_highlights": "Sunset cruise\nCandlelight dinner",
+            "hotel_category": "4-star or similar",
+            "room_type": "Couple room",
+            "couple_experiences": "Private dinner",
+            "honeymoon_inclusions": "Room decoration",
+        },
+        headers=admin,
+    )
     assert created.status_code == 201
     package_id = created.json()["id"]
     assert created.json()["category"] == "honeymoon"
+    assert created.json()["package_type"] == "domestic"
+    assert created.json()["package_category"] == "honeymoon"
+    assert created.json()["romantic_highlights"] == "Sunset cruise\nCandlelight dinner"
 
-    listed = client.get("/api/travel", params={"category": "honeymoon"})
+    listed = client.get("/api/travel", params={"category": "honeymoon", "package_category": "honeymoon"})
     assert listed.status_code == 200
     assert any(item["id"] == package_id for item in listed.json()["items"])
 
+    abroad_slug = f"honeymoon-abroad-{uuid.uuid4().hex[:8]}"
+    abroad = client.post(
+        "/api/travel",
+        json={**_package(abroad_slug, category="honeymoon"), "package_type": "international"},
+        headers=admin,
+    )
+    assert abroad.status_code == 201
+    abroad_id = abroad.json()["id"]
+    domestic = client.get(
+        "/api/travel",
+        params={"category": "honeymoon", "package_type": "domestic", "package_category": "honeymoon"},
+    )
+    assert any(item["id"] == package_id for item in domestic.json()["items"])
+    assert all(item["id"] != abroad_id for item in domestic.json()["items"])
+
     other = client.get("/api/travel", params={"category": "domestic"})
     assert all(item["id"] != package_id for item in other.json()["items"])
+    assert client.delete(f"/api/travel/{package_id}", headers=admin).status_code == 204
+    assert client.delete(f"/api/travel/{abroad_id}", headers=admin).status_code == 204
 
 
 def test_travel_enquiry_submission_and_admin_management(client: TestClient, db_session: Session) -> None:
