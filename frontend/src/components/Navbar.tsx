@@ -7,7 +7,6 @@ import { SearchBar } from "./SearchBar.tsx";
 
 const links = [
   { to: "/shop", label: "Shop", children: [] as { to: string; label: string }[] },
-  { to: "/events", label: "Events", children: [] },
   { to: "/about", label: "About", children: [] },
   { to: "/contact", label: "Contact", children: [] },
 ];
@@ -34,8 +33,6 @@ export function Navbar() {
       <div className="bg-ink text-paper">
         <div className="mx-auto flex max-w-7xl items-center justify-center gap-6 overflow-x-auto px-4 py-2 text-[11px] tracking-wide whitespace-nowrap sm:text-xs">
           <span>Beauty, fashion, and lifestyle</span>
-          <span className="text-paper/50">·</span>
-          <span>Events are quoted before booking</span>
         </div>
       </div>
       <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 py-3 sm:px-6">

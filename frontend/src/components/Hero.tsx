@@ -98,8 +98,7 @@ export function Hero() {
             Discover Beauty, Fashion &amp; Lifestyle
           </h1>
           <p className="mt-5 max-w-md text-base leading-7 text-muted">
-            Shop beauty and personal care, fashion, and lifestyle goods. Events are planned from an enquiry and
-            confirmed with a quote.
+            Shop beauty and personal care, fashion, and lifestyle goods.
           </p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <Link
@@ -108,12 +107,6 @@ export function Hero() {
             >
               Shop Now
             </Link>
-            <a
-              href="#services"
-              className="inline-flex items-center justify-center rounded-full border border-line bg-white px-5 py-3 text-sm font-medium hover:border-ink"
-            >
-              Explore Services
-            </a>
           </div>
         </div>
         <div className="relative">
