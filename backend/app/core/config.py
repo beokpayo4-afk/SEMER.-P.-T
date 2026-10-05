@@ -105,7 +105,15 @@ class Settings(BaseSettings):
 
     @property
     def cors_origin_list(self) -> list[str]:
-        return [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]
+        origins = [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]
+        for origin in (
+            "http://localhost:5173",
+            "http://127.0.0.1:5173",
+            "https://semer.vercel.app",
+        ):
+            if origin not in origins:
+                origins.append(origin)
+        return origins
 
     @property
     def sqlalchemy_database_url(self) -> str:
