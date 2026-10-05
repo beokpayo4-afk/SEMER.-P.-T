@@ -31,6 +31,7 @@ import { NotFoundPage } from "./pages/NotFoundPage.tsx";
 import { OrderPage } from "./pages/OrderPage.tsx";
 import { OrdersPage } from "./pages/OrdersPage.tsx";
 import { ProductPage } from "./pages/ProductPage.tsx";
+import { ProductRefundReturnPolicyPage } from "./pages/ProductRefundReturnPolicyPage.tsx";
 import { RegisterPage } from "./pages/RegisterPage.tsx";
 import { ShopPage } from "./pages/ShopPage.tsx";
 
@@ -68,6 +69,7 @@ export default function App() {
                 <Route path="events/enquire" element={<EventEnquiryPage />} />
                 <Route path="events/:id" element={<EventDetailPage />} />
                 <Route path="contact" element={<ContactPage />} />
+                <Route path="product-refund-return-policy" element={<ProductRefundReturnPolicyPage />} />
                 <Route path="login" element={<LoginPage />} />
                 <Route path="register" element={<RegisterPage />} />
                 <Route path="cart" element={<CartPage />} />

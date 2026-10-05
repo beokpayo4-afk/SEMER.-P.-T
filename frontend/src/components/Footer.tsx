@@ -30,6 +30,7 @@ export function Footer() {
             })}
             <Link to="/events">Events</Link>
             <Link to="/contact">Contact</Link>
+            <Link to="/product-refund-return-policy">Product Refund / Return Policy</Link>
           </div>
         </div>
         <div className="text-sm">

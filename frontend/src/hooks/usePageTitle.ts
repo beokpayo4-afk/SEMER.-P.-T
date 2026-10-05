@@ -4,6 +4,7 @@ import { mediaUrl } from "../utils/media.ts";
 type PageDetails = {
   description?: string;
   image?: string;
+  documentTitle?: string;
 };
 
 function setMeta(attribute: "name" | "property", key: string, content: string | undefined) {
@@ -32,12 +33,14 @@ function absoluteUrl(url: string) {
 export function usePageTitle(title: string, details?: PageDetails) {
   const description = details?.description;
   const image = details?.image;
+  const documentTitle = details?.documentTitle;
 
   useEffect(() => {
-    document.title = `${title} · SEMER`;
+    const fullTitle = documentTitle ?? `${title} · SEMER`;
+    document.title = fullTitle;
     const imageUrl = image ? absoluteUrl(image) : undefined;
     setMeta("name", "description", description);
-    setMeta("property", "og:title", `${title} · SEMER`);
+    setMeta("property", "og:title", fullTitle);
     setMeta("property", "og:description", description);
     setMeta("property", "og:image", imageUrl);
     setMeta("property", "og:url", window.location.href);
@@ -47,5 +50,5 @@ export function usePageTitle(title: string, details?: PageDetails) {
     if (!canonical.parentElement) {
       document.head.appendChild(canonical);
     }
-  }, [title, description, image]);
+  }, [title, description, image, documentTitle]);
 }
