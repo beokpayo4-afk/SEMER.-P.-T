@@ -12,7 +12,7 @@ export function ContactCta() {
         </div>
         <Link
           to="/contact"
-          className="mt-6 inline-flex items-center justify-center rounded-full bg-paper px-5 py-2.5 text-sm font-medium text-ink md:mt-0"
+          className="mt-6 inline-flex items-center justify-center rounded-full bg-paper px-5 py-2.5 text-sm font-medium text-ink transition duration-200 hover:-translate-y-px hover:bg-white md:mt-0"
         >
           Contact us
         </Link>

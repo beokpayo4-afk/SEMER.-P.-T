@@ -12,7 +12,7 @@ const links = [
 ];
 
 function linkClass({ isActive }: { isActive: boolean }) {
-  return `text-sm ${isActive ? "text-wine" : "text-ink"}`;
+  return `nav-link text-sm ${isActive ? "text-wine" : "text-ink"}`;
 }
 
 export function Navbar() {
@@ -83,12 +83,12 @@ export function Navbar() {
           ) : null}
           <Link
             to="/cart"
-            className="relative grid h-10 w-10 place-items-center rounded-full border border-line text-sm"
+            className="relative grid h-10 w-10 place-items-center rounded-full border border-line text-sm transition duration-200 hover:-translate-y-px hover:border-ink"
             aria-label={count > 0 ? `Cart, ${count} items` : "Cart"}
           >
             <CartIcon />
             {count > 0 ? (
-              <span className="absolute -top-1 -right-1 grid h-5 min-w-5 place-items-center rounded-full bg-wine px-1 text-[10px] text-paper">
+              <span key={count} className="cart-pop absolute -top-1 -right-1 grid h-5 min-w-5 place-items-center rounded-full bg-wine px-1 text-[10px] text-paper">
                 {count}
               </span>
             ) : null}
@@ -104,7 +104,7 @@ export function Navbar() {
               Sign out
             </button>
           ) : (
-            <Link to="/login" className="hidden rounded-full border border-line px-3 py-2 text-sm sm:inline">
+            <Link to="/login" className="hidden rounded-full border border-line px-3 py-2 text-sm transition duration-200 hover:-translate-y-px hover:border-ink sm:inline">
               Sign in
             </Link>
           )}
@@ -114,7 +114,7 @@ export function Navbar() {
         </div>
       </div>
       {open ? (
-        <div className="border-t border-line px-4 py-4 lg:hidden">
+        <div className="menu-in border-t border-line px-4 py-4 lg:hidden">
           <SearchBar value={query} onChange={setQuery} onSubmit={search} className="md:hidden" />
           <nav className="mt-4 flex flex-col gap-3">
             {links.map((link) => (

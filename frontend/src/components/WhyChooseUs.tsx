@@ -1,3 +1,5 @@
+import { Reveal } from "./Reveal.tsx";
+
 const points = [
   {
     title: "One catalogue",
@@ -17,11 +19,13 @@ export function WhyChooseUs() {
   return (
     <section className="border-y border-line bg-white">
       <div className="mx-auto grid max-w-7xl gap-6 px-4 py-8 sm:grid-cols-2 sm:px-6 lg:grid-cols-3">
-        {points.map((point) => (
-          <article key={point.title}>
-            <h2 className="text-base">{point.title}</h2>
-            <p className="mt-1 text-sm leading-6 text-muted">{point.text}</p>
-          </article>
+        {points.map((point, index) => (
+          <Reveal key={point.title} delay={index * 90}>
+            <p className="text-xs tracking-[0.18em] text-wine">{String(index + 1).padStart(2, "0")}</p>
+            <h2 className="mt-2 text-base">{point.title}</h2>
+            <span className="rule-grow mt-3 block h-px w-10 bg-wine/70" />
+            <p className="mt-3 text-sm leading-6 text-muted">{point.text}</p>
+          </Reveal>
         ))}
       </div>
     </section>
