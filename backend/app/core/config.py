@@ -110,6 +110,8 @@ class Settings(BaseSettings):
             "http://localhost:5173",
             "http://127.0.0.1:5173",
             "https://semer.vercel.app",
+            "https://semer.in",
+            "https://www.semer.in",
         ):
             if origin not in origins:
                 origins.append(origin)
