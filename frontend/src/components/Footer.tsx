@@ -28,7 +28,6 @@ export function Footer() {
                 </Link>
               );
             })}
-            <Link to="/travel">Travel</Link>
             <Link to="/events">Events</Link>
             <Link to="/contact">Contact</Link>
           </div>
