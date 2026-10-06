@@ -1,11 +1,12 @@
 import uuid
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Response, status
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_optional_user, require_admin
 from app.db.session import get_db
+from app.models.enums import UserRole
 from app.models.identity import User
 from app.schemas.catalog import CategoryCreate, CategoryPublic, CategoryUpdate
 from app.services import catalog as catalog_service
@@ -15,9 +16,12 @@ router = APIRouter()
 
 @router.get("", response_model=list[CategoryPublic])
 def list_categories(
+    response: Response,
     db: Annotated[Session, Depends(get_db)],
     viewer: Annotated[User | None, Depends(get_optional_user)],
 ) -> list[CategoryPublic]:
+    if viewer is None or viewer.role != UserRole.admin:
+        response.headers["Cache-Control"] = "public, max-age=120"
     return catalog_service.list_categories(db, viewer)
 
 
